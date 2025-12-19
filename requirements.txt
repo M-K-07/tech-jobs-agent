@@ -1,0 +1,21 @@
+# YouTube Data API
+google-api-python-client
+
+# LLM support (OpenAI-compatible or others)
+openai
+
+# PostgreSQL database
+psycopg2-binary
+
+# Environment variables
+python-dotenv
+
+# Utilities
+requests
+langchain_openai
+
+# YouTube Transcript API
+supadata
+
+# Telegram 
+python-telegram-bot 

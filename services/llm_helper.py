@@ -60,7 +60,7 @@ def get_job_details(title,transcript):
     You are a helpful assistant that extracts job details from YouTube video transcripts.
     TASK:
     - Extract the following details:
-    1. Company Name (It is clearly mentioned in the video title or transcript)
+    1. Company Name (It is clearly mentioned in the video title for example: "Mhtechin Hiring Interns🔥Apply Now | Open to All" -> Company Name is "Mhtechin")
     2. Role (if internship mention "Internship" in brackets. for example: Software Engineer (Internship))
     3. Location
     4. Job Requirements (brief summary which includes skills/qualifications and experience required.The requirements should be in bullet points. If the role is internship then include the duration of internship)

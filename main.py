@@ -73,7 +73,7 @@ async def fetch_job_listings(bot):
     search_req = youtube.search().list(
         part="snippet",
         channelId=CHANNEL_ID,
-        maxResults=4,
+        maxResults=3,
         order="date",
         type="video",
     )

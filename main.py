@@ -167,7 +167,16 @@ async def main():
     # Run only job fetcher (no polling in GitHub Actions)
     await fetch_job_listings(bot)
 
+def main_local():
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("subscribe", subscribe))
+    application.add_handler(CommandHandler("unsubscribe", unsubscribe))
+
+    application.run_polling()
+
 if __name__ == "__main__":
     # print("Bot started...")
-    # application.run_polling()
-    asyncio.run(main())
+    # asyncio.run(main_local())
+    main_local()

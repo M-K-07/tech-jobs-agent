@@ -132,9 +132,10 @@ def subscribe_user(chat_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        UPDATE users
-        SET subscribed = TRUE
-        WHERE chat_id = %s;
+        INSERT INTO users (chat_id, subscribed)
+        VALUES (%s, TRUE)
+        ON CONFLICT (chat_id)
+        DO UPDATE SET subscribed = TRUE;
     """, (chat_id,))
 
     conn.commit()
@@ -174,6 +175,7 @@ def check_video_exists(video_id):
     conn.close()
 
     return exists
+
 
 if __name__ == "__main__":
     initialize_db()

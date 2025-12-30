@@ -7,7 +7,7 @@ load_dotenv()
 def get_llm():
     llm = ChatOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        model="openai/gpt-oss-20b:free",
+        model="deepseek/deepseek-r1-0528:free",
         api_key=os.getenv("OPENAI_API_KEY")
     )
     return llm
@@ -113,4 +113,6 @@ if __name__ == "__main__":
     """
     
     res = get_job_details(title, transcript)
+    print("----- JOB DETAILS -----")
+    print(res)
     print(type(res))

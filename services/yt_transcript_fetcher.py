@@ -22,3 +22,9 @@ def get_transcript(video_id):
         return transcript.content
     else:
         print(f"Processing started with job ID: {transcript.job_id}")
+        
+        
+if __name__ == "__main__":
+    video_id = "LfC8ENNtpF8"  # Example video ID
+    transcript = get_transcript(video_id)
+    print(transcript)

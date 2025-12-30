@@ -178,5 +178,5 @@ def main_local():
 
 if __name__ == "__main__":
     # print("Bot started...")
-    # asyncio.run(main_local())
-    main_local()
+    asyncio.run(main())
+    # main_local()

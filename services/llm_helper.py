@@ -63,7 +63,7 @@ def get_job_details(title,transcript):
     1. Company Name (It is clearly mentioned in the video title for example: "Mhtechin Hiring Interns🔥Apply Now | Open to All" -> Company Name is "Mhtechin")
     2. Role (if internship mention "Internship" in brackets. for example: Software Engineer (Internship))
     3. Location
-    4. Job Requirements (brief summary which includes skills/qualifications and experience required.The requirements should be in bullet points. If the role is internship then include the duration of internship)
+    4. Job Requirements (brief summary which includes skills/qualifications and experience required. Format as a plain text list using "•" as the bullet. Do NOT use HTML tags like <ul> or <li>. Use newlines to separate items. If the role is internship then include the duration of internship)
     5. Package Range (if mentioned, if not, mention "Not specified")
     - Output format MUST be exactly in JSON as shown below:
     {{

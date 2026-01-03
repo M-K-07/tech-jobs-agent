@@ -39,8 +39,8 @@ The system uses the Supadata API to reliably fetch YouTube video transcripts and
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd ai-tech-job-fetcher
+git clone https://github.com/M-K-07/tech-jobs-agent
+cd tech-jobs-agent
 ```
 
 ### 2. Install Dependencies

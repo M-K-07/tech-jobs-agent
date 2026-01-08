@@ -27,7 +27,7 @@ def get_job_link(title, description):
     RULES:
     1. Prefer links that start with "Link:"
     2. If no "Link:" exists, use the company name from the TITLE to match a relevant URL.
-    3. Ignore unrelated links (Topmate, WhatsApp, Educative, Google Docs, Reddit, GFG, etc.)
+    3. Ignore unrelated links (Topmate, WhatsApp, Educative, GFG, etc.) 
 
     EXAMPLES:
 

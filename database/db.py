@@ -176,6 +176,25 @@ def check_video_exists(video_id):
 
     return exists
 
+def delete_first_five_jobs():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM job_listings 
+        WHERE id IN (
+            SELECT id FROM job_listings 
+            ORDER BY created_at ASC 
+            LIMIT 3
+        );
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 
 if __name__ == "__main__":
-    initialize_db()
+    # initialize_db()
+    delete_first_five_jobs()
+    print("Database initialized and first five jobs deleted.")

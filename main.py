@@ -14,6 +14,7 @@ from database.db import (
     subscribe_user,
     get_subscribed_users,
     check_video_exists,
+    delete_first_five_jobs
 )
 
 
@@ -99,28 +100,12 @@ async def fetch_job_listings(bot):
 
         title = video["title"]
         description = video["description"]
-        
-        print("----- NEW JOB FOUND -----")
-        print("Title:", title)
-        print("Description:", description)
-
-        print("\n==============================")
-        print("Processing:", title)
 
         transcript = get_transcript(video_id)
-        print("----- TRANSCRIPT -----")
-        print(transcript)
-        print("==============================\n")
 
         job_link = get_job_link(title, description)
-        print("----- JOB LINK -----")
-        print(job_link)
-        print("==============================\n")
 
         job_details = get_job_details(title, transcript)
-        print("----- JOB DETAILS -----")
-        print(job_details)
-        print("==============================\n")
 
         job_listing = {
             "video_id": video_id,
@@ -142,6 +127,7 @@ async def fetch_job_listings(bot):
         # 2️⃣ STORE ONLY IF SENT
         if success:
             insert_job_if_not_exists(job_listing)
+            delete_first_five_jobs()
             print("✅ Job stored in DB")
         else:
             print("⚠ Job NOT stored (message failed)")

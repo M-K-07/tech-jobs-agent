@@ -127,7 +127,7 @@ async def fetch_job_listings(bot):
         # 2️⃣ STORE ONLY IF SENT
         if success:
             insert_job_if_not_exists(job_listing)
-            delete_first_five_jobs()
+            # delete_first_five_jobs()
             print("✅ Job stored in DB")
         else:
             print("⚠ Job NOT stored (message failed)")

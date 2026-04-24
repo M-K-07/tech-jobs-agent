@@ -3,7 +3,7 @@ name: Tech Job Bot (YouTube → Telegram)
 on:
   schedule:
     # Runs every 2 hours
-    - cron: "0 */2 * * *"
+    #- cron: "0 */2 * * *"
   workflow_dispatch:   # Allows manual run from GitHub UI
 
 jobs:

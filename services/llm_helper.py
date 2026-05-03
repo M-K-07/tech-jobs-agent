@@ -7,7 +7,7 @@ load_dotenv()
 def get_llm():
     llm = ChatOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        model="arcee-ai/trinity-large-preview:free",
+        model="google/gemma-4-26b-a4b-it:free",
         api_key=os.getenv("OPENAI_API_KEY")
     )
     return llm

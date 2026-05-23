@@ -95,8 +95,9 @@ async def fetch_job_listings(bot):
         video_res = video_req.execute()
         video = video_res["items"][0]["snippet"]
 
-        if "hiring" not in video["title"].lower():
+        if "hiring" not in video["title"].lower() or "Apply" not in video["title"].lower():
             continue
+        
 
         title = video["title"]
         description = video["description"]
@@ -178,6 +179,6 @@ def main_local():
     application.run_polling()
 
 if __name__ == "__main__":
-    # print("Bot started...")
+    print("Bot started...")
     asyncio.run(main())
     # main_local()

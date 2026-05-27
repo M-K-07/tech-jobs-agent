@@ -7,7 +7,7 @@ load_dotenv()
 def get_llm():
     llm = ChatOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        model="deepseek/deepseek-v4-flash:free",
+        model="meta-llama/llama-3.3-70b-instruct:free",
         api_key=os.getenv("OPENAI_API_KEY")
     )
     return llm

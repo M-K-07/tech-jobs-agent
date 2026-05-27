@@ -13,13 +13,10 @@ from database.db import (
     unsubscribe_user,
     subscribe_user,
     get_subscribed_users,
-    check_video_exists,
-    delete_first_five_jobs
+    check_video_exists
 )
 
-
 # ENV SETUP
-
 load_dotenv()
 
 API_KEY = os.getenv("YOUTUBE_API_KEY")
@@ -29,31 +26,70 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 youtube = build("youtube", "v3", developerKey=API_KEY)
 
 
-# MESSAGE FORMATTER
+# -------------------------
+# YOUTUBE FETCH (FIXED)
+# -------------------------
+
+def get_uploads_playlist_id():
+    channel_req = youtube.channels().list(
+        part="contentDetails",
+        id=CHANNEL_ID
+    )
+    channel_res = channel_req.execute()
+
+    return channel_res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+
+
+def fetch_latest_videos(limit=5):
+    uploads_id = get_uploads_playlist_id()
+
+    playlist_req = youtube.playlistItems().list(
+        part="snippet",
+        playlistId=uploads_id,
+        maxResults=limit
+    )
+    playlist_res = playlist_req.execute()
+
+    videos = []
+
+    for item in playlist_res["items"]:
+        snippet = item["snippet"]
+
+        videos.append({
+            "video_id": snippet["resourceId"]["videoId"],
+            "title": snippet["title"],
+            "description": snippet["description"]
+        })
+
+    return videos
+
+
+# -------------------------
+# FORMATTER
+# -------------------------
 
 def format_content(job):
     return f"""
-🏢 Company: {job['company_name']}
+Company: {job['company_name']}
+Role: {job['role']}
+Location: {job['location']}
+Package: {job['package_range'] or 'Not specified'}
 
-💼 Role: {job['role']}
-
-📍 Location: {job['location']}
-
-💰 Package: {job['package_range'] or 'Not specified'}
-
-🔗 Apply Here:  
+Apply Here:
 {job['job_url']}
 
-📋 Requirements:  
+Requirements:
 {job['job_requirements']}
 """
 
 
-# NOTIFY USERS (SEND FIRST)
+# -------------------------
+# NOTIFY USERS
+# -------------------------
 
 async def notify_users(bot, content):
     users = get_subscribed_users()
-    sent_to_anyone = False
+    sent = False
 
     for chat_id in users:
         try:
@@ -62,55 +98,48 @@ async def notify_users(bot, content):
                 text=content,
                 disable_web_page_preview=True
             )
-            sent_to_anyone = True
+            sent = True
         except Exception as e:
-            print(f"Failed to send to {chat_id}: {e}")
+            print(f"❌ Failed for {chat_id}: {e}")
 
-    return sent_to_anyone
+    return sent
 
-# FETCH + PROCESS JOBS
+
+# -------------------------
+# MAIN PIPELINE
+# -------------------------
 
 async def fetch_job_listings(bot):
-    search_req = youtube.search().list(
-        part="snippet",
-        channelId=CHANNEL_ID,
-        maxResults=3,
-        order="date",
-        type="video",
-    )
-    search_res = search_req.execute()
+    print("🔍 Fetching latest videos...")
 
-    for item in search_res["items"]:
-        video_id = item["id"]["videoId"]
+    videos = fetch_latest_videos()
 
-        # Skip already processed videos
+    for video in videos:
+        video_id = video["video_id"]
+        title = video["title"].lower()
+
+        print(f"Processing: {title}")
+
+        # skip duplicates
         if check_video_exists(video_id):
-            print(f"⏭ Skipping existing video {video_id}")
+            print("⏭ Already processed")
             continue
 
-        video_req = youtube.videos().list(
-            part="snippet",
-            id=video_id
-        )
-        video_res = video_req.execute()
-        video = video_res["items"][0]["snippet"]
-
-        if "hiring" not in video["title"].lower() or "Apply" not in video["title"].lower():
+        # better filter
+        if "hiring" not in title and "apply" not in title:
+            print("⛔ Not a job post")
             continue
-        
 
-        title = video["title"]
         description = video["description"]
 
         transcript = get_transcript(video_id)
 
-        job_link = get_job_link(title, description)
-
-        job_details = get_job_details(title, transcript)
+        job_link = get_job_link(video["title"], description)
+        job_details = get_job_details(video["title"], transcript)
 
         job_listing = {
             "video_id": video_id,
-            "title": title,
+            "title": video["title"],
             "description": description,
             "company_name": job_details.get("company_name"),
             "role": job_details.get("role"),
@@ -122,40 +151,44 @@ async def fetch_job_listings(bot):
 
         content = format_content(job_listing)
 
-        # 1️⃣ SEND MESSAGE
         success = await notify_users(bot, content)
 
-        # 2️⃣ STORE ONLY IF SENT
         if success:
             insert_job_if_not_exists(job_listing)
-            # delete_first_five_jobs()
-            print("✅ Job stored in DB")
+            print("✅ Stored in DB")
         else:
-            print("⚠ Job NOT stored (message failed)")
+            print("⚠ Not stored (send failed)")
 
 
-# TELEGRAM COMMANDS
+# -------------------------
+# TELEGRAM HANDLERS
+# -------------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     insert_user_if_not_exists(chat_id)
+
     await context.bot.send_message(
         chat_id=chat_id,
-        text="👋 Welcome to Tech Job Bot!\nYou will receive hiring updates here.\n\nUse /unsubscribe to stop."
+        text="Welcome to Tech Job Bot. You will receive latest job updates here."
     )
+
 
 async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     subscribe_user(chat_id)
-    await context.bot.send_message(chat_id=chat_id, text="✅ Subscribed successfully!")
+    await context.bot.send_message(chat_id=chat_id, text="Subscribed successfully")
+
 
 async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     unsubscribe_user(chat_id)
-    await context.bot.send_message(chat_id=chat_id, text="❌ You have unsubscribed.")
+    await context.bot.send_message(chat_id=chat_id, text="Unsubscribed successfully")
 
 
-# ENTRY POINT (LOCAL + GITHUB ACTIONS SAFE)
+# -------------------------
+# ENTRY POINT
+# -------------------------
 
 async def main():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -166,8 +199,8 @@ async def main():
 
     bot = application.bot
 
-    # Run only job fetcher (no polling in GitHub Actions)
     await fetch_job_listings(bot)
+
 
 def main_local():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -177,6 +210,7 @@ def main_local():
     application.add_handler(CommandHandler("unsubscribe", unsubscribe))
 
     application.run_polling()
+
 
 if __name__ == "__main__":
     print("Bot started...")

@@ -95,7 +95,7 @@ async def fetch_job_listings(bot):
         video_res = video_req.execute()
         video = video_res["items"][0]["snippet"]
 
-        if "hiring" not in video["title"].lower() or "Apply" not in video["title"].lower():
+        if "hiring" not in video["title"].lower() or "apply" not in video["title"].lower():
             continue
         
 

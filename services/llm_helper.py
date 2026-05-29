@@ -1,14 +1,15 @@
-from langchain_openai import ChatOpenAI
-import os
+from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
+import os
 import json
+
 load_dotenv()
 
 def get_llm():
-    llm = ChatOpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        model="meta-llama/llama-3.3-70b-instruct:free",
-        api_key=os.getenv("OPENAI_API_KEY")
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0
     )
     return llm
 
@@ -25,7 +26,7 @@ def get_job_link(title, description):
     No link found
 
     RULES:
-    1. Prefer links that start with "Link:"
+    1. Prefer links that start with "Link: or Links:" in the description. These are more likely to be the correct application links. Like google forms, jobs portal, etc.
     2. If no "Link:" exists, use the company name from the TITLE to match a relevant URL.
     3. Ignore unrelated links (Topmate, WhatsApp, Educative, GFG, etc.) 
 

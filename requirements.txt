@@ -3,7 +3,7 @@ google-api-python-client
 
 # LLM support (OpenAI-compatible or others)
 openai
-
+langchain-google-genai
 # PostgreSQL database
 psycopg2-binary
 

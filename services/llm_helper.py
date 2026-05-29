@@ -1,4 +1,5 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import os
 import json
@@ -11,6 +12,7 @@ def get_llm():
         google_api_key=os.getenv("GOOGLE_API_KEY"),
         temperature=0
     )
+
     return llm
 
 
@@ -52,8 +54,10 @@ def get_job_link(title, description):
     Description:
     {description}
     """
+    print(f"Invoking LLM to extract job link for: {title}")
     llm=get_llm() 
     response = llm.invoke(PROMPT)
+    print("LLM successfully returned job link extraction response.")
     return response.content.strip()
 
 def get_job_details(title,transcript):
@@ -82,8 +86,10 @@ def get_job_details(title,transcript):
     Transcript:
     {transcript}
     """
+    print(f"Invoking LLM to extract job details for: {title}")
     llm=get_llm()
     response = llm.invoke(PROMPT)
+    print("LLM successfully returned job details extraction response.")
     content = response.content.strip()
 
     # Clean up markdown code blocks if present
@@ -95,8 +101,16 @@ def get_job_details(title,transcript):
         content = content[:-3]
 
     try:
-        return json.loads(content.strip())
-    except json.JSONDecodeError:
+        parsed = json.loads(content.strip())
+        
+        if isinstance(parsed, list) and len(parsed) > 0:
+            parsed = parsed[0]
+            
+        if not isinstance(parsed, dict):
+            raise ValueError("Parsed JSON is not a dictionary")
+            
+        return parsed
+    except (json.JSONDecodeError, ValueError):
         return {
             "company_name": "Not specified",
             "role": "Not specified",

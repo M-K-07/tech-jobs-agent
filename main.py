@@ -20,7 +20,7 @@ from database.db import (
 load_dotenv()
 
 API_KEY = os.getenv("YOUTUBE_API_KEY")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
+CHANNEL_IDS = [cid.strip() for cid in os.getenv("CHANNEL_ID", "").split(",") if cid.strip()]
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 youtube = build("youtube", "v3", developerKey=API_KEY)
@@ -30,36 +30,42 @@ youtube = build("youtube", "v3", developerKey=API_KEY)
 # YOUTUBE FETCH (FIXED)
 # -------------------------
 
-def get_uploads_playlist_id():
+def get_uploads_playlist_id(channel_id):
     channel_req = youtube.channels().list(
         part="contentDetails",
-        id=CHANNEL_ID
+        id=channel_id
     )
     channel_res = channel_req.execute()
+
+    if not channel_res.get("items"):
+        return None
 
     return channel_res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
 
-def fetch_latest_videos(limit=5):
-    uploads_id = get_uploads_playlist_id()
-
-    playlist_req = youtube.playlistItems().list(
-        part="snippet",
-        playlistId=uploads_id,
-        maxResults=limit
-    )
-    playlist_res = playlist_req.execute()
-
+def fetch_latest_videos(limit=7):
     videos = []
 
-    for item in playlist_res["items"]:
-        snippet = item["snippet"]
+    for channel_id in CHANNEL_IDS:
+        uploads_id = get_uploads_playlist_id(channel_id)
+        if not uploads_id:
+            continue
 
-        videos.append({
-            "video_id": snippet["resourceId"]["videoId"],
-            "title": snippet["title"],
-            "description": snippet["description"]
-        })
+        playlist_req = youtube.playlistItems().list(
+            part="snippet",
+            playlistId=uploads_id,
+            maxResults=limit
+        )
+        playlist_res = playlist_req.execute()
+
+        for item in playlist_res["items"]:
+            snippet = item["snippet"]
+
+            videos.append({
+                "video_id": snippet["resourceId"]["videoId"],
+                "title": snippet["title"],
+                "description": snippet["description"]
+            })
 
     return videos
 
@@ -70,9 +76,13 @@ def fetch_latest_videos(limit=5):
 
 def format_content(job):
     return f"""
+
 Company: {job['company_name']}
+
 Role: {job['role']}
+
 Location: {job['location']}
+
 Package: {job['package_range'] or 'Not specified'}
 
 Apply Here:
@@ -80,6 +90,8 @@ Apply Here:
 
 Requirements:
 {job['job_requirements']}
+
+==========================
 """
 
 
@@ -100,7 +112,8 @@ async def notify_users(bot, content):
             )
             sent = True
         except Exception as e:
-            print(f"❌ Failed for {chat_id}: {e}")
+            print(f"Failed for {chat_id}: {e}")
+    
 
     return sent
 
@@ -110,7 +123,7 @@ async def notify_users(bot, content):
 # -------------------------
 
 async def fetch_job_listings(bot):
-    print("🔍 Fetching latest videos...")
+    print("Fetching latest videos...")
 
     videos = fetch_latest_videos()
 
@@ -122,12 +135,12 @@ async def fetch_job_listings(bot):
 
         # skip duplicates
         if check_video_exists(video_id):
-            print("⏭ Already processed")
+            print("Already processed")
             continue
 
         # better filter
         if "hiring" not in title and "apply" not in title:
-            print("⛔ Not a job post")
+            print("Not a job post")
             continue
 
         description = video["description"]
@@ -155,9 +168,9 @@ async def fetch_job_listings(bot):
 
         if success:
             insert_job_if_not_exists(job_listing)
-            print("✅ Stored in DB")
+            print("Stored in DB")
         else:
-            print("⚠ Not stored (send failed)")
+            print("Not stored (send failed)")
 
 
 # -------------------------

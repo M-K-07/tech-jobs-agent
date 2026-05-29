@@ -32,5 +32,6 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
           python main.py

@@ -43,7 +43,7 @@ def get_uploads_playlist_id(channel_id):
     return channel_res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
 
-def fetch_latest_videos(limit=7):
+def fetch_latest_videos(limit=3):
     videos = []
 
     for channel_id in CHANNEL_IDS:

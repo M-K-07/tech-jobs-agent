@@ -8,8 +8,8 @@ load_dotenv()
 
 def get_llm():
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        model="gemini-3.5-flash",
+        google_api_key=os.getenv('GOOGLE_API_KEY'),
         temperature=0
     )
 
@@ -58,7 +58,13 @@ def get_job_link(title, description):
     llm=get_llm() 
     response = llm.invoke(PROMPT)
     print("LLM successfully returned job link extraction response.")
-    return response.content.strip()
+    
+    content = response.content
+    if isinstance(content, list):
+        content = "".join(
+            part.get("text", "") if isinstance(part, dict) else str(part) for part in content
+        )
+    return content.strip()
 
 def get_job_details(title,transcript):
     PROMPT = f"""
@@ -90,7 +96,13 @@ def get_job_details(title,transcript):
     llm=get_llm()
     response = llm.invoke(PROMPT)
     print("LLM successfully returned job details extraction response.")
-    content = response.content.strip()
+    
+    content = response.content
+    if isinstance(content, list):
+        content = "".join(
+            part.get("text", "") if isinstance(part, dict) else str(part) for part in content
+        )
+    content = content.strip()
 
     # Clean up markdown code blocks if present
     if content.startswith("```json"):

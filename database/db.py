@@ -16,9 +16,14 @@ def initialize_db():
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             chat_id BIGINT UNIQUE NOT NULL,
+            name TEXT,
             subscribed BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+    """)
+
+    cursor.execute("""
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT;
     """)
 
     cursor.execute("""
@@ -83,16 +88,17 @@ def insert_job_if_not_exists(job):
 
     return job_id
 
-def insert_user_if_not_exists(chat_id):
+def insert_user_if_not_exists(chat_id, name=None):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO users (chat_id, subscribed)
-        VALUES (%s,%s)
-        ON CONFLICT (chat_id) DO NOTHING
+        INSERT INTO users (chat_id, name, subscribed)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (chat_id) 
+        DO UPDATE SET name = COALESCE(EXCLUDED.name, users.name)
         RETURNING id;
-    """, (chat_id, True))
+    """, (chat_id, name, True))
 
     result = cursor.fetchone()
 
@@ -127,21 +133,51 @@ def unsubscribe_user(chat_id):
     cursor.close()
     conn.close()
 
-def subscribe_user(chat_id):
+def subscribe_user(chat_id, name=None):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO users (chat_id, subscribed)
-        VALUES (%s, TRUE)
+        INSERT INTO users (chat_id, name, subscribed)
+        VALUES (%s, %s, TRUE)
         ON CONFLICT (chat_id)
-        DO UPDATE SET subscribed = TRUE;
-    """, (chat_id,))
+        DO UPDATE SET subscribed = TRUE, name = COALESCE(EXCLUDED.name, users.name);
+    """, (chat_id, name))
 
     conn.commit()
     cursor.close()
     conn.close()
-    
+
+def update_user_name(chat_id, name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE users
+        SET name = %s
+        WHERE chat_id = %s;
+    """, (name, chat_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def get_all_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT chat_id, name, subscribed FROM users;
+    """)
+
+    users = cursor.fetchall()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return users
+
 def get_subscribed_users():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -195,6 +231,6 @@ def delete_first_five_jobs():
 
 
 if __name__ == "__main__":
-    # initialize_db()
-    delete_first_five_jobs()
-    print("Database initialized and first five jobs deleted.")
+    initialize_db()
+    print("Database schema updated with 'name' column.")
+

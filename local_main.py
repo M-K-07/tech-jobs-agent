@@ -254,5 +254,5 @@ def main_local():
 
 if __name__ == "__main__":
     log("🚀 Script initiated.")
-    asyncio.run(main())
-    # main_local()
+    # asyncio.run(main())
+    main_local()
